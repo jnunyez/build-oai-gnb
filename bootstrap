@@ -1,0 +1,2 @@
+sudo subscription-manager register --username $RH_USER --password $RH_PASS
+sudo dnf -y install git usbutils buildah podman

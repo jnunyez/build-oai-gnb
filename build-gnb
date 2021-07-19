@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+
+HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+
+dnf -y install ni
+git clone https://gitlab.eurecom.fr/oai/openairinterface5g $HERE/work/  --branch 2021.w28 --recursive --depth 1
+
+cd /vagrant/work
+
+dnf -y install ninja-build \
+	libxlst-devel \
+	openssl-devel \
+	libconfig-devel \
+    libcrypto-devel \
+	boost-devel \
+

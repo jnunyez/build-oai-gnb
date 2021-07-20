@@ -1,0 +1,9 @@
+OAI_VERSION=develop
+
+UHD_VERSION=4.1.0.1
+
+PYTHON_VERSION=3.6
+
+BASE_IMAGE="registry.access.redhat.com/ubi8/ubi:latest"
+
+REPO="codeready-builder-for-rhel-8-x86_64-rpms"

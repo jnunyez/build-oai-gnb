@@ -2,16 +2,68 @@
 set -e
 
 HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
+. "$HERE/_env"
 
-dnf -y install ni
-git clone https://gitlab.eurecom.fr/oai/openairinterface5g $HERE/work/  --branch 2021.w28 --recursive --depth 1
-
-cd /vagrant/work
-
+#install sw dependencies
 dnf -y install ninja-build \
-	libxlst-devel \
+	libxslt-devel \
 	openssl-devel \
 	libconfig-devel \
-    libcrypto-devel \
 	boost-devel \
+	nettle-devel \
+	python3-asn1crypto \
+	protobuf-c-compiler \
+	libyaml-devel \
+	elfutils-libelf-devel \
+	python3-mako \
+	python3-numpy
 
+# mako and numpy needed for UHD
+
+
+#config, build, and install latest UHD driver for USRP
+mkdir -p $HERE/uhd && wget https://files.ettus.com/binaries/uhd/uhd_004.001.000.001-release/uhd_${UHD_VERSION}-release.tar.gz -O $HERE/uhd && \
+tar xvzf uhd-${UHD_VERSION}.tar.gz && mkdir build && cd build && cmake ../ -DPYTHON_EXECUTABLE=/usr/bin/${PYTHON_VERSION}  -DRUNTIME_PYTHON_EXECUTABLE=/usr/bin/${PYTHON_VERSION} && \
+make && sudo make install && sudo ldconfig && sudo python3.6 /usr/local/lib/uhd/utils/uhd_images_downloader.py 
+
+#build OAI gNB
+git clone https://gitlab.eurecom.fr/oai/openairinterface5g $HERE/oai/  --branch ${OAI_VERSION} --recursive --depth 1 && \
+cd $HERE/oai && /bin/sh oaienv && cd cmake_targets && \
+mkdir -p log && ./build_oai -I --gNB 
+
+#build container image using buildah
+CONTAINER_ID=$(buildah from registry.access.redhat.com/ubi8/ubi:latest)
+
+buildah run ${CONTAINER_ID} -- dnf -y install --enablerepo ${REPO} \
+                                boost \
+                                protobuf-c \
+                                libconfig \
+                                libusb \
+                                lksctp-tools \
+                                iproute \
+                                iputils \
+                                tcpdump
+#add oai gNodeb libs
+buildah add ${CONTAINER_ID} ${HERE}/ran_build/build/nr-softmodem /oai/bin/
+buildah add ${CONTAINER_ID} ${HERE}/ran_build/build/*.so /lib64/
+
+#add uhd bin and libs 
+buildah add ${CONTAINER_ID} /usr/local/bin/uhd_* /usr/local/bin
+buildah add ${CONTAINER_ID} /usr/local/share/uhd /usr/local/share/uhd
+buildah add ${CONTAINER_ID} /usr/local/lib64 /lib64
+
+
+buidah run ${CONTAINER_ID} -- ln -sf libuhd.so.4.1.0 libuhd.so
+buildah run ${CONTAINER_ID} -- ln -sf liboai_eth_transpro.so liboai_transpro.so
+
+
+
+#add entrypoint
+buildah add ${CONTAINER_ID} $WORK/assets/scripts/entrypoint /bin/oai
+
+buildah config \
+        --entrypoint /bin/oai
+        "$CONTAINER_ID" 
+buildah commit "$CONTAINER_ID" localhost/oai_gnb:latest
+
+podman save localhost/oai_gnb:latest oai.tar

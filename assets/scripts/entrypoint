@@ -1,0 +1,2 @@
+export UHD_IMAGES_DIR=/usr/local/share/uhd/images && uhd_usrp_probe
+/oai/bin/nr-softmodem -O /oai/etc/gnb.conf

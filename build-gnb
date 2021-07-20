@@ -36,22 +36,29 @@ CONTAINER_ID=$(buildah from registry.access.redhat.com/ubi8/ubi:latest)
 
 buildah run ${CONTAINER_ID} -- dnf -y install --enablerepo ${REPO} \
                                 boost \
+                                blas \
+                                atlas \
+                                lapack \
+                                libXpm \
                                 protobuf-c \
                                 libconfig \
                                 libusb \
                                 lksctp-tools \
                                 iproute \
                                 iputils \
-                                tcpdump
+                                tcpdump 
 #add oai gNodeb libs
 buildah add ${CONTAINER_ID} ${HERE}/ran_build/build/nr-softmodem /oai/bin/
+buildah add ${CONTAINER_ID} ${HERE}/ci-scripts/conf_files/ /oai/etc/
 buildah add ${CONTAINER_ID} ${HERE}/ran_build/build/*.so /lib64/
 
 #add uhd bin and libs 
+#export UHD_IMAGES_DIR=/usr/local/share/uhd/images
 buildah add ${CONTAINER_ID} /usr/local/bin/uhd_* /usr/local/bin
 buildah add ${CONTAINER_ID} /usr/local/share/uhd /usr/local/share/uhd
 buildah add ${CONTAINER_ID} /usr/local/lib64 /lib64
 
+buildah add ${CONTAINER_ID} /lib64/libforms.so.2 /lib64
 
 buidah run ${CONTAINER_ID} -- ln -sf libuhd.so.4.1.0 libuhd.so
 buildah run ${CONTAINER_ID} -- ln -sf liboai_eth_transpro.so liboai_transpro.so
@@ -59,11 +66,13 @@ buildah run ${CONTAINER_ID} -- ln -sf liboai_eth_transpro.so liboai_transpro.so
 
 
 #add entrypoint
+
 buildah add ${CONTAINER_ID} $WORK/assets/scripts/entrypoint /bin/oai
+
 
 buildah config \
         --entrypoint /bin/oai
         "$CONTAINER_ID" 
 buildah commit "$CONTAINER_ID" localhost/oai_gnb:latest
 
-podman save localhost/oai_gnb:latest oai.tar
+podman save localhost/oai_gnb:latest -o oai.tar

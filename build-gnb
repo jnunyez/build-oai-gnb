@@ -14,65 +14,79 @@ dnf -y install ninja-build \
 	python3-asn1crypto \
 	protobuf-c-compiler \
 	libyaml-devel \
-	elfutils-libelf-devel \
-	python3-mako \
-	python3-numpy
+	elfutils-libelf-devel
 
-# mako and numpy needed for UHD
+# boost-devel, makoand numpy needed for UHD
 
 
 #config, build, and install latest UHD driver for USRP
-mkdir -p $HERE/uhd && wget https://files.ettus.com/binaries/uhd/uhd_004.001.000.001-release/uhd_${UHD_VERSION}-release.tar.gz -O $HERE/uhd && \
-tar xvzf uhd-${UHD_VERSION}.tar.gz && mkdir build && cd build && cmake ../ -DPYTHON_EXECUTABLE=/usr/bin/${PYTHON_VERSION}  -DRUNTIME_PYTHON_EXECUTABLE=/usr/bin/${PYTHON_VERSION} && \
-make && sudo make install && sudo ldconfig && sudo python3.6 /usr/local/lib/uhd/utils/uhd_images_downloader.py 
+function build_uhd {
+        #install dependencies
+	dnf -y install boost-devel \
+		python3-numpy \
+		python3-mako \
 
-#build OAI gNB
-git clone https://gitlab.eurecom.fr/oai/openairinterface5g $HERE/oai/  --branch ${OAI_VERSION} --recursive --depth 1 && \
-cd $HERE/oai && /bin/sh oaienv && cd cmake_targets && \
-mkdir -p log && ./build_oai -I --gNB 
+	mkdir -p $HERE/uhd && wget https://files.ettus.com/binaries/uhd/uhd_004.001.000.001-release/uhd_${UHD_VERSION}-release.tar.gz -P $HERE/uhd && \
+	cd $HERE/uhd && tar xvzf uhd_${UHD_VERSION}-release.tar.gz && cd host && mkdir build && cd build && cmake ../ -DPYTHON_EXECUTABLE=/usr/bin/${PYTHON_VERSION}  -DRUNTIME_PYTHON_EXECUTABLE=/usr/bin/${PYTHON_VERSION} && \
+	make && sudo make install && sudo ldconfig && sudo python3.6 /usr/local/lib/uhd/utils/uhd_images_downloader.py 
+}
 
-#build container image using buildah
-CONTAINER_ID=$(buildah from registry.access.redhat.com/ubi8/ubi:latest)
-
-buildah run ${CONTAINER_ID} -- dnf -y install --enablerepo ${REPO} \
-                                boost \
-                                blas \
-                                atlas \
-                                lapack \
-                                libXpm \
-                                protobuf-c \
-                                libconfig \
-                                libusb \
-                                lksctp-tools \
-                                iproute \
-                                iputils \
-                                tcpdump 
-#add oai gNodeb libs
-buildah add ${CONTAINER_ID} ${HERE}/ran_build/build/nr-softmodem /oai/bin/
-buildah add ${CONTAINER_ID} ${HERE}/ci-scripts/conf_files/ /oai/etc/
-buildah add ${CONTAINER_ID} ${HERE}/ran_build/build/*.so /lib64/
-
-#add uhd bin and libs 
-#export UHD_IMAGES_DIR=/usr/local/share/uhd/images
-buildah add ${CONTAINER_ID} /usr/local/bin/uhd_* /usr/local/bin
-buildah add ${CONTAINER_ID} /usr/local/share/uhd /usr/local/share/uhd
-buildah add ${CONTAINER_ID} /usr/local/lib64 /lib64
-
-buildah add ${CONTAINER_ID} /lib64/libforms.so.2 /lib64
-
-buidah run ${CONTAINER_ID} -- ln -sf libuhd.so.4.1.0 libuhd.so
-buildah run ${CONTAINER_ID} -- ln -sf liboai_eth_transpro.so liboai_transpro.so
+function build_oai {
+	#build OAI gNB
+	git clone https://gitlab.eurecom.fr/oai/openairinterface5g $HERE/oai/  --branch ${OAI_VERSION} --recursive --depth 1 && \
+	cd $HERE/oai && /bin/sh oaienv && cd cmake_targets && \
+	mkdir -p log && ./build_oai -I --gNB 
+}
 
 
+function build_gnb {
 
-#add entrypoint
+	#build container image using RH ubi
+	CONTAINER_ID=$(buildah from registry.access.redhat.com/ubi8/ubi:latest)
 
-buildah add ${CONTAINER_ID} $WORK/assets/scripts/entrypoint /bin/oai
+	buildah run ${CONTAINER_ID} -- dnf -y install --enablerepo ${REPO} \
+                                	boost \
+                                	blas \
+                                	atlas \
+                                	lapack \
+                                	libXpm \
+                                	protobuf-c \
+                                	libconfig \
+                                	libusb \
+                                	lksctp-tools \
+                                	iproute \
+                                	iputils \
+                                	tcpdump 
+	#add oai gNodeb libs
+	buildah add ${CONTAINER_ID} ${HERE}/ran_build/build/nr-softmodem /oai/bin/
+	buildah add ${CONTAINER_ID} ${HERE}/ci-scripts/conf_files/ /oai/etc/
+	buildah add ${CONTAINER_ID} ${HERE}/ran_build/build/*.so /lib64/
+
+	#add uhd bin and libs 
+	#export UHD_IMAGES_DIR=/usr/local/share/uhd/images
+	buildah add ${CONTAINER_ID} /usr/local/bin/uhd_* /usr/local/bin
+	buildah add ${CONTAINER_ID} /usr/local/share/uhd /usr/local/share/uhd
+	buildah add ${CONTAINER_ID} /usr/local/lib64 /lib64
+
+	buildah add ${CONTAINER_ID} /lib64/libforms.so.2 /lib64
+
+	buidah run ${CONTAINER_ID} -- ln -sf libuhd.so.4.1.0 libuhd.so
+	buildah run ${CONTAINER_ID} -- ln -sf liboai_eth_transpro.so liboai_transpro.so
+
+	#add entrypoint
+	buildah add ${CONTAINER_ID} $WORK/assets/scripts/entrypoint /bin/oai
+
+	buildah config \
+        	--entrypoint /bin/oai
+        	--wordir /oai
+        	"$CONTAINER_ID" 
+
+	buildah commit "$CONTAINER_ID" localhost/oai_gnb:latest
+
+	podman save localhost/oai_gnb:latest -o oai.tar
+}
 
 
-buildah config \
-        --entrypoint /bin/oai
-        "$CONTAINER_ID" 
-buildah commit "$CONTAINER_ID" localhost/oai_gnb:latest
-
-podman save localhost/oai_gnb:latest -o oai.tar
+build_uhd
+build_oai
+build_gnb

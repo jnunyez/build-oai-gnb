@@ -14,7 +14,7 @@ The image is built inside vagrant Fedora VM using buildah. Once the two images a
    ```
    vagrant up
    vagrant ssh
-   cd /vagrant
+   cd work
    ```
 
 2. Build the image:
@@ -25,9 +25,8 @@ The image is built inside vagrant Fedora VM using buildah. Once the two images a
    ```
    
 
-3. Push image (webui or open5gs) container to registry (in this case an insecure registry).
+3. Push image `oai-gnb` container to registry (in this case an insecure registry).
 
-   * Push open5gs base image:
    ```
    load-image oai_gnb
    ```

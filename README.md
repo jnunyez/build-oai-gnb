@@ -24,7 +24,7 @@ The image is built inside vagrant Fedora VM using buildah. Once the two images a
    ```
    
 
-3. Push image `oai-gnb` container to registry (in this case an insecure registry).
+3. Push image labelled as `oai_gnb` container to registry (in this case an insecure registry).
 
    ```
    load-image oai_gnb

@@ -5,7 +5,7 @@ set -e
 HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
 . "$HERE/_env"
 
-ORIGIN=$PWD
+WORK=$PWD
 
 #config, build, and install latest UHD driver for USRP
 function build_uhd {
@@ -21,7 +21,7 @@ function build_uhd {
 
 function build_oai {
 	#build OAI gNB
-	cd $ORIGIN
+	cd $WORK
 	git clone https://gitlab.eurecom.fr/oai/openairinterface5g $HERE/oai/  --branch ${OAI_VERSION} --recursive --depth 1 && \
 	cp assets/patches/build_oai $HERE/oai/cmake_targets/build_oai && \
 	cd $HERE/oai && /bin/sh oaienv && cd cmake_targets && \
@@ -32,7 +32,7 @@ function build_oai {
 function build_gnb {
 
 	#build container image using RH ubi
-	cd $ORIGIN
+	cd $WORK
 	CONTAINER_ID=$(buildah from "$BASE_IMAGE")
 
 	buildah run ${CONTAINER_ID} -- dnf -y install --enablerepo ${REPO} \
@@ -65,7 +65,7 @@ function build_gnb {
 	buildah run ${CONTAINER_ID} -- ln -sf liboai_eth_transpro.so liboai_transpro.so
 
 	#add entrypoint
-	buildah add ${CONTAINER_ID} $ORIGIN/assets/scripts/entrypoint /bin/oai
+	buildah add ${CONTAINER_ID} $WORK/assets/scripts/entrypoint /bin/oai
 
 	buildah config \
         	--entrypoint /bin/oai \

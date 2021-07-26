@@ -1,7 +1,12 @@
+#!/bin/bash
+
 set -e
+
 dnf -y gettext
+
 GNB_IP=$(ip addr show eth0 | grep inet.*brd.*eth0 | awk '{print $2}') \
-envsubst '$GNB_IP' < /oai/etc/gnb.conf > /oai/etc/gnb-prod.yaml
+envsubst '$GNB_IP' < /oai/etc/${COMPONENT}.conf > /oai/etc/${COMPONENT}-prod.yaml
 
 export UHD_IMAGES_DIR=/usr/local/share/uhd/images && uhd_usrp_probe
-/oai/bin/nr-softmodem -O /oai/etc/gnb-prod.conf
+
+/oai/bin/nr-softmodem -O /oai/etc/${COMPONENT}-prod.conf

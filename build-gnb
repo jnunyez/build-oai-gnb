@@ -10,13 +10,13 @@ ORIGIN=$PWD
 #config, build, and install latest UHD driver for USRP
 function build_uhd {
         #install dependencies
-	dnf -y install boost-devel \
+	sudo dnf -y install boost-devel \
 		python3-numpy \
-		python3-mako \
+		python3-mako
 
 	mkdir -p $HERE/uhd && wget https://files.ettus.com/binaries/uhd/uhd_004.001.000.001-release/uhd_${UHD_VERSION}-release.tar.gz -P $HERE/uhd && \
 	cd $HERE/uhd && tar xvzf uhd_${UHD_VERSION}-release.tar.gz && cd host && mkdir build && cd build && cmake ../ -DPYTHON_EXECUTABLE=/usr/bin/${PYTHON_VERSION}  -DRUNTIME_PYTHON_EXECUTABLE=/usr/bin/${PYTHON_VERSION} && \
-	make && sudo make install && sudo ldconfig && sudo python3.6 /usr/local/lib64/uhd/utils/uhd_images_downloader.py 
+	make && sudo make install && sudo ldconfig && sudo ${PYTHON_VERSION} /usr/local/lib64/uhd/utils/uhd_images_downloader.py 
 }
 
 function build_oai {

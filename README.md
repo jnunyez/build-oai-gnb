@@ -18,10 +18,9 @@ The image is built inside vagrant Fedora VM using buildah. Once the two images a
    ```
 
 2. Build the image:
-	* Building open5gs base image:
    
    ```
-   build-gnb
+   ./build-gnb
    ```
    
 

@@ -3,4 +3,6 @@ sudo subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpm
 sudo subscription-manager repos --enable rhel-8-for-x86_64-appstream-rpms
 sudo dnf -y upgrade && \
 sudo dnf -y install git usbutils buildah podman && \
-git clone https://github.com/jnunyez/build-oai-gnb work --recursive --depth 1
+git clone https://github.com/jnunyez/build-oai-gnb work --recursive --depth 1 && \
+sudo chown -R vagrant:vagrant /home/vagrant/ && \
+sudo chown -R vagrant:vagrant /var/log/

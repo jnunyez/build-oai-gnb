@@ -26,7 +26,7 @@ function build_oai {
 	git clone https://gitlab.eurecom.fr/oai/openairinterface5g $HERE/oai/  --branch ${OAI_VERSION} --recursive --depth 1 && \
 	cp assets/patches/build_oai $HERE/oai/cmake_targets/build_oai && \
 	cd $HERE/oai && /bin/sh oaienv && cd cmake_targets && \
-	mkdir -p log && ./build_oai -I --gNB 
+	mkdir -p log && ./build_oai -I && ./build_oai --gNB -w USRP
 }
 
 
@@ -71,6 +71,7 @@ function build_gnb {
 
 	buildah run ${CONTAINER_ID} -- ln -sf /lib64/libuhd.so.4.1.0 /lib64/libuhd.so
 	buildah run ${CONTAINER_ID} -- ln -sf /lib64/liboai_eth_transpro.so /lib64/liboai_transpro.so
+	buildah run ${CONTAINER_ID} -- ln -sf /lib64/liboai_usrpdevif.so /lib64/liboai_device.so
 
 	#add entrypoint
 	buildah add ${CONTAINER_ID} $WORK/assets/scripts/entrypoint /bin/oai

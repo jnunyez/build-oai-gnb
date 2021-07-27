@@ -5,7 +5,7 @@ set -e
 dnf -y install gettext
 
 GNB_IP=$(ip addr show eth0 | grep inet.*brd.*eth0 | awk '{print $2}') \
-envsubst '$GNB_IP' < /oai/etc/${COMPONENT}.conf > /oai/etc/${COMPONENT}-prod.yaml
+envsubst '$GNB_IP' < /oai/etc/${COMPONENT}.conf > /oai/etc/${COMPONENT}-prod.conf
 
 udevadm control --reload-rules && udevadm trigger
 

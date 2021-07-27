@@ -4,7 +4,7 @@ This repo contains the generation of the oaips.
 
 ## WorkFlow
 
-The image is built inside vagrant Fedora VM using buildah. Once the two images are built they are pushed to a registry in RH ubi image. The image pushed in a registry will be consumed by k8s.
+The image is built inside vagrant Fedora VM using `buildah`. The Vagrant VM is used to build necessary libraries for Universal Hardware Driver (UHD) and OAI gNB in SA mode libraries.  Once the libraries are built they are moved to RH Universal Base Image (UBI) image using `buildah`.  The resulting image is pushed into a registry that will be consumed by k8s.
 
 ## Quickstart
 

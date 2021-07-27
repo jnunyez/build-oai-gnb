@@ -59,7 +59,7 @@ function build_gnb {
 	buildah add ${CONTAINER_ID} ${HERE}/oai/cmake_targets/ran_build/build/*.so /lib64/
 
 	#copy udev rules
-	buildah add ${CONTAINER_ID} /usr/local/lib64/uhd/host/utils/uhd-usrp.rules /etc/udev/rules.d/
+	buildah add ${CONTAINER_ID} /usr/local/lib64/uhd/utils/uhd-usrp.rules /etc/udev/rules.d/
 
 	#add uhd bin and libs 
 	

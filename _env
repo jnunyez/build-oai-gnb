@@ -2,7 +2,7 @@ OAI_VERSION=develop
 
 UHD_VERSION=4.1.0.1
 
-PYTHON_VERSION=3.6
+PYTHON_VERSION=python3.6
 
 BASE_IMAGE="registry.access.redhat.com/ubi8/ubi:latest"
 

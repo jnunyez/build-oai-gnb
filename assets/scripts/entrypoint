@@ -11,4 +11,6 @@ udevadm control --reload-rules && udevadm trigger
 
 export UHD_IMAGES_DIR=/usr/local/share/uhd/images && uhd_usrp_probe
 
-/oai/bin/nr-softmodem -O /oai/etc/${COMPONENT}-prod.conf
+# https://gitlab.eurecom.fr/oai/openairinterface5g/-/commit/c9f72efc945fe75cf091b75e1e82b756d7bd3180
+# execute the whole gnb stack in 5G-SA mode
+/oai/bin/nr-softmodem -E --sa -O /oai/etc/${COMPONENT}-prod.conf

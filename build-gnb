@@ -82,11 +82,11 @@ function build_gnb {
         	"$CONTAINER_ID" 
 
 	buildah commit "$CONTAINER_ID" localhost/oai_gnb:latest
-
-	podman save localhost/oai_gnb:latest -o oai.tar
+        
 }
 
 
-build_uhd
-build_oai
-build_gnb
+$HERE/build_uhd
+$HERE/build_oai
+$HERE/build_gnb
+$HERE/load_image oai_gnb

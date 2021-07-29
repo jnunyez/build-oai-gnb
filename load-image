@@ -1,9 +1,0 @@
-#!/bin/bash
-set -e
-
-HERE=$(dirname "$(readlink --canonicalize "$BASH_SOURCE")")
-. "$HERE/_env"
-
-docker image load --input $HERE/$1.tar
-docker image tag localhost/$1:latest localhost:5000/$1:latest
-docker push localhost:5000/$1:latest

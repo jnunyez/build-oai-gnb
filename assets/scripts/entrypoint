@@ -11,6 +11,7 @@ udevadm control --reload-rules && udevadm trigger
 
 export UHD_IMAGES_DIR=/usr/local/share/uhd/images && uhd_usrp_probe
 
-# https://gitlab.eurecom.fr/oai/openairinterface5g/-/commit/c9f72efc945fe75cf091b75e1e82b756d7bd3180
-# execute the whole gnb stack in 5G-SA mode
+# See this issue: https://gitlab.eurecom.fr/oai/openairinterface5g/-/commit/c9f72efc945fe75cf091b75e1e82b756d7bd3180
+# execute the whole gnb stack in 5G-SA mode for USRP B210
+# note that USRP B210 needs to use 3/4 of sampling rate because of hardware limitations
 /oai/bin/nr-softmodem -E --sa -O /oai/etc/${COMPONENT}-prod.conf
